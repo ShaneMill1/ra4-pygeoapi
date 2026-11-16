@@ -1,0 +1,494 @@
+# =================================================================
+#
+# Authors: Tom Kralidis <tomkralidis@gmail.com>
+#
+# Copyright (c) 2025 Tom Kralidis
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following
+# conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# =================================================================
+
+server:
+    bind:
+        host: 0.0.0.0
+        port: 5000
+    url: https://edr-api-c.mdl.nws.noaa.gov/ra-iv
+    mimetype: application/json; charset=UTF-8
+    encoding: utf-8
+    gzip: false
+    languages:
+        # First language is the default language
+        - en-US
+        - fr-CA
+    # cors: true
+    pretty_print: true
+    limits:
+        default_items: 20
+        max_items: 50
+    # templates:
+      # path: /path/to/Jinja2/templates
+      # static: /path/to/static/folder # css/js/img
+    map:
+        url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+#    manager:
+#        name: TinyDB
+#        connection: /tmp/pygeoapi-process-manager.db
+#        output_dir: /tmp/
+    # ogc_schemas_location: /opt/schemas.opengis.net
+    admin: false # enable admin api
+
+logging:
+    level: ERROR
+    #logfile: /tmp/pygeoapi.log
+
+metadata:
+    identification:
+        title:
+            en: pygeoapi default instance
+            fr: instance par défaut de pygeoapi
+        description:
+            en: pygeoapi provides an API to geospatial data
+            fr: pygeoapi fournit une API aux données géospatiales
+        keywords:
+            en:
+                - geospatial
+                - data
+                - api
+            fr:
+                - géospatiale
+                - données
+                - api
+        keywords_type: theme
+        terms_of_service: https://creativecommons.org/licenses/by/4.0/
+        url: https://example.org
+    license:
+        name: CC-BY 4.0 license
+        url: https://creativecommons.org/licenses/by/4.0/
+    provider:
+        name: Organization Name
+        url: https://pygeoapi.io
+    contact:
+        name: Lastname, Firstname
+        position: Position Title
+        address: Mailing Address
+        city: City
+        stateorprovince: Administrative Area
+        postalcode: Zip or Postal Code
+        country: Country
+        phone: +xx-xxx-xxx-xxxx
+        fax: +xx-xxx-xxx-xxxx
+        email: you@example.org
+        url: Contact URL
+        hours: Mo-Fr 08:00-17:00
+        instructions: During hours of service. Off on weekends.
+        role: pointOfContact
+
+resources:
+
+    rmtn-all-text-minute:
+        type: collection
+        title: 'RA-IV RMTN: All Text, One File per Minute'
+        description: 'Text bulletins in the ALL_TEXT_MINUTE folder of the RA-IV GIFS RMTN data. Files are named DDHHMM_RMTN (UTC day, hour and minute), for example 161625_RMTN.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - text bulletins
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_MINUTE/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_MINUTE/
+              id_field: id
+              time_field: reference_time
+              options:
+                  media_type: text/plain
+
+    rmtn-all-text-hourly:
+        type: collection
+        title: 'RA-IV RMTN: All Text, One File per Hour'
+        description: 'Text bulletins in the ALL_TEXT_HOURLY folder of the RA-IV GIFS RMTN data. Files are named RMTN_TEXT_HOURLY_DDHH00 (UTC day and hour), for example RMTN_TEXT_HOURLY_151800.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - text bulletins
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_HOURLY/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_HOURLY/
+              id_field: id
+              time_field: reference_time
+              options:
+                  media_type: text/plain
+
+    rmtn-all-text-rolling:
+        type: collection
+        title: 'RA-IV RMTN: All Text, Rolling Files'
+        description: 'Text bulletin files in the ALL_TEXT_ROLLING folder of the RA-IV GIFS RMTN data: M05_RMTN, M30_RMTN, M60_RMTN and H01_RMTN.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - text bulletins
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_ROLLING/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/ALL_TEXT_ROLLING/
+              id_field: id
+              time_field: reference_time
+              options:
+                  media_type: text/plain
+
+    rmtn-surface:
+        type: collection
+        title: 'RA-IV RMTN: Surface Data'
+        description: 'Surface data bulletins (WMO data type designator T1 = S) in the SURFACE folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - surface data
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/SURFACE/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/SURFACE/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-fcast:
+        type: collection
+        title: 'RA-IV RMTN: Forecasts'
+        description: 'Forecast bulletins (WMO data type designator T1 = F) in the FCAST folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - forecasts
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/FCAST/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/FCAST/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-ua:
+        type: collection
+        title: 'RA-IV RMTN: Upper-Air Data'
+        description: 'Upper air data bulletins (WMO data type designator T1 = U) in the UA folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - upper air
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/UA/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/UA/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-warn:
+        type: collection
+        title: 'RA-IV RMTN: Warnings'
+        description: 'Warning products in the WARN folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - warnings
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/WARN/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/WARN/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-anlz-climate:
+        type: collection
+        title: 'RA-IV RMTN: Analyses and Climate'
+        description: 'Products in the ANLZ_CLIMATE folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - analyses
+            - climate
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/ANLZ_CLIMATE/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/ANLZ_CLIMATE/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-sat:
+        type: collection
+        title: 'RA-IV RMTN: Satellite Data'
+        description: 'Satellite data bulletins (WMO data type designator T1 = T) in the SAT folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - satellite
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/SAT/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/SAT/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-radar:
+        type: collection
+        title: 'RA-IV RMTN: Radar'
+        description: 'Products in the RADAR folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - radar
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/RADAR/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/RADAR/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-pic:
+        type: collection
+        title: 'RA-IV RMTN: Pictorial Products'
+        description: 'Pictorial information (WMO data type designators T1 = P and Q) in the PIC folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - pictorial
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/PIC/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/PIC/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-bufr:
+        type: collection
+        title: 'RA-IV RMTN: BUFR'
+        description: 'BUFR-encoded observational data (WMO data type designator T1 = I) in the BUFR folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix. Opening an item adds the locations of the stations or platforms reported in the file.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - BUFR
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/BUFR/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/BUFR/
+              id_field: id
+              time_field: reference_time
+              options:
+                  inspect_bufr: true
+
+    rmtn-admin:
+        type: collection
+        title: 'RA-IV RMTN: Administrative Notices'
+        description: 'Notices (WMO data type designator T1 = N) in the ADMIN folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - notices
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/ADMIN/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/ADMIN/
+              id_field: id
+              time_field: reference_time
+              options:
+                  media_type: text/plain
+
+    rmtn-grib2:
+        type: collection
+        title: 'RA-IV RMTN: GRIB2'
+        description: 'GRIB2 files in the GRIB2 folder of the RA-IV GIFS RMTN data, one per reference time and forecast hour, named YYYYMMDDHHMM_fHHH.grib2_rmtn. Opening an item adds the grid extent and valid time of the first GRIB message in the file.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - GRIB2
+            - gridded data
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/GRIB2/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/GRIB2/
+              id_field: id
+              time_field: reference_time
+
+    rmtn-grib-extended:
+        type: collection
+        title: 'RA-IV RMTN: GRIB Extended'
+        description: 'GRIB files in the GRIB_Extended folder of the RA-IV GIFS RMTN data, one per reference time and forecast hour, named YYYYMMDDHHMM_fHH.grib_rmtn. Opening an item adds the grid extent and valid time of the first GRIB message in the file.'
+        keywords:
+            - National Weather Service
+            - RA-IV
+            - RMTN
+            - GRIB
+            - gridded data
+        extents:
+            spatial:
+                bbox: [-180, -90, 180, 90]
+                crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        links:
+            - type: text/html
+              rel: related
+              title: RA4-GIFS directory listing
+              href: https://ra4-gifs.weather.gov/data/RMTN/GRIB_Extended/
+        providers:
+            - type: feature
+              name: pygeoapi.provider.file_listing.FileListingProvider
+              data: https://ra4-gifs.weather.gov/data/RMTN/GRIB_Extended/
+              id_field: id
+              time_field: reference_time
