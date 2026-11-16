@@ -1,0 +1,48 @@
+# pygeoapi + RMTN file collections (edr_app.py, FileListingProvider)
+#
+# Additive to upstream: the upstream Dockerfile is left unchanged.
+#
+#   docker build -f Dockerfile.edr -t edr-rmtn-pygeoapi .
+#   docker run --rm -p 5000:5000 edr-rmtn-pygeoapi
+#
+# Or: ./start_local.sh --docker
+
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HOME=/tmp \
+    PYGEOAPI_CONFIG=/pygeoapi/example-config.yaml \
+    PYGEOAPI_OPENAPI=/tmp/openapi-local.yaml \
+    API_PORT=5000 \
+    GUNICORN_WORKERS=2
+
+WORKDIR /pygeoapi
+
+# Dependencies first, so code changes don't reinstall them.
+# pygrib and eccodes wheels include ecCodes; rasterio wheels include GDAL.
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir \
+        gunicorn gevent fsspec beautifulsoup4 lxml pygrib eccodes
+
+COPY . .
+RUN pip install --no-cache-dir --no-deps . \
+    && chmod -R a+rX /pygeoapi \
+    && useradd --system --no-create-home pygeoapi
+
+# Runs unprivileged. Any uid works (start_local.sh uses the host uid so a
+# mounted config with owner-only permissions is readable).
+USER pygeoapi
+EXPOSE 5000
+
+# Same gunicorn command as ./start_local.sh
+CMD pygeoapi openapi generate "$PYGEOAPI_CONFIG" --output-file "$PYGEOAPI_OPENAPI" \
+    && exec gunicorn edr_app:APP \
+        -w "$GUNICORN_WORKERS" \
+        -k gevent \
+        --worker-connections 1000 \
+        -b "0.0.0.0:$API_PORT" \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level info
