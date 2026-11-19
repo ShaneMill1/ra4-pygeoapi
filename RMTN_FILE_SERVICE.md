@@ -12,9 +12,12 @@ No pygeoapi file is modified.
 
 | File | Purpose |
 |---|---|
-| `pygeoapi/provider/file_listing.py` | `FileListingProvider`: lists files, reads their bytes, extracts GRIB and BUFR locations. |
+| `pygeoapi/provider/file_listing.py` | `FileListingProvider`: lists files, reads their bytes, extracts GRIB, BUFR and text-bulletin locations. |
+| `pygeoapi/provider/wmo_text.py` | Locations from WMO text bulletins. |
+| `pygeoapi/provider/station_tables/` | Station tables used by `wmo_text.py`, the script that builds them, and a README on sources. |
 | `edr_app.py` | WSGI entry point. Imports pygeoapi's Flask `APP` and adds the `/download` route. |
-| `example-config.yaml` | The `rmtn-*` collections. |
+| `example-config.yaml` | The `rmtn-*` collections, and `server.templates.path: rmtn_templates`. |
+| `rmtn_templates/collections/items/` | Copies of pygeoapi's `index.html` and `item.html`. When there is no geometry, the map shows the whole world, and the item page also shows a "no geometry" notice. Otherwise they behave as upstream. All other pages use pygeoapi's built-in templates. |
 | `start_local.sh` | Installs the extra packages and runs `gunicorn edr_app:APP`, locally or with `--docker`. |
 | `Dockerfile.edr` | Image used by `--docker`. The upstream `Dockerfile` is unchanged. |
 
@@ -74,6 +77,39 @@ Each subset contributes its first valid position, which for radiosondes is the
 launch position. BUFR files have no extension, so this is enabled per
 collection.
 
+**Text bulletins** (collections with `inspect_text: true`: `rmtn-surface`,
+`rmtn-fcast`, `rmtn-ua`, `rmtn-sat`): parses the standard report layouts and
+adds:
+
+- `geometry`: `Point` or `MultiPoint` of the report locations
+- `number_of_reports`, `location_source` (`station table` and/or
+  `reported position`)
+- `stations` (ICAO or WMO id and name) and `unlocated_stations` (ids not in
+  the tables)
+
+| Heading (T1T2) | Report type | Location from |
+|---|---|---|
+| `SA`, `SP` | METAR, SPECI | ICAO id |
+| `FT`, `FC` | TAF | ICAO id |
+| `SM`, `SI`, `SN`, `SO`, `SS` | SYNOP land (`AAXX`) | WMO station number |
+| | SHIP, mobile (`BBXX`, `OOXX`); buoy, TESAC, BATHY (`ZZYY`, `KKYY`, `JJVV`…) | Position coded in the report |
+| `U*` | TEMP/PILOT land (`TT..`, `PP..`) | WMO station number |
+| | TEMP ship, mobile, dropsonde (`UU..`, `II..`, `XX..`) | Position coded in the report |
+| `UD`, `UR` | AMDAR, reconnaissance | Positions in the report (`2639N 12324E`) |
+| `TC` | Satellite cloud reports | ICAO id per line |
+| `TP` | Tropical cyclone fixes | `C.`/`D.` latitude and longitude lines |
+
+Other types, such as US zone forecasts (`FP`, `FZ`) and binary files (`SX`,
+`SH`), keep `geometry: null`.
+
+Station positions come from `station_tables/`: WMO OSCAR/Surface for WMO
+ids and the NOAA Aviation Weather Center station list for ICAO ids, with old
+NWS tables as fallback. The tables are a committed snapshot; refresh them with
+`station_tables/refresh.py` (see `station_tables/README.md`). Ids not found
+are listed in `unlocated_stations`. In samples, 0–9% of station ids were
+unlocated depending on the report type: none for METAR, SPECI and TAF, up to
+9% for some synoptic bulletins.
+
 If a file can't be decoded (not GRIB/BUFR, or `pygrib`/`eccodes` missing),
 the item is returned with `geometry: null` and a warning is logged.
 
@@ -96,8 +132,8 @@ the item is returned with `geometry: null` and a warning is logged.
 - Only a request that arrives before the startup fetch finishes has to wait.
   The largest folder, `SURFACE` (about 11,800 files), takes about 10 s to
   fetch.
-- GRIB and BUFR results are cached per file (name and size), up to 64 per
-  collection.
+- GRIB, BUFR and text results are cached per file (name and size), up to 64
+  per collection.
 
 ## Configuration
 
@@ -115,6 +151,7 @@ providers:
           # cache_ttl: 60                    # seconds
           # inspect_grib: extent             # extent | full | false
           # inspect_bufr: false              # true: station locations from BUFR
+          # inspect_text: false              # true: locations from WMO text bulletins
           # prewarm: true                    # fetch the listing at startup
 ```
 
@@ -140,7 +177,9 @@ exits. If it doesn't start, or port 5000 is in use, the script prints the
 error and removes the container. Each run rebuilds the image and replaces
 the container.
 
-The config is mounted read-only, so config edits need only a restart. The
+The config is mounted read-only, so config edits need only a restart.
+Templates are copied into the image, so template edits need a rebuild
+(rerun the script). The
 container runs as the host user so an owner-only config file is readable.
 
 ```bash
