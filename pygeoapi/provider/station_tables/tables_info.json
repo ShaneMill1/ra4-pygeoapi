@@ -1,0 +1,23 @@
+{
+  "built": "2026-11-19T17:30:07Z",
+  "sources": {
+    "OSCAR/Surface": "ok, 13265 WMO ids, 1 secondary ids dropped",
+    "AWC": "ok, 8755 ICAO ids, 3912 WMO ids",
+    "NWS": "6700 ICAO ids, 11547 WMO ids"
+  },
+  "wmo_stations": {
+    "total": 15530,
+    "by_source": {
+      "WMO OSCAR/Surface": 13264,
+      "NOAA AWC": 276,
+      "NWS nsd_bbsss": 1990
+    }
+  },
+  "icao_stations": {
+    "total": 9252,
+    "by_source": {
+      "NOAA AWC": 8755,
+      "NWS nsd_cccc": 497
+    }
+  }
+}

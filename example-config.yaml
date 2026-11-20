@@ -44,9 +44,11 @@ server:
     limits:
         default_items: 20
         max_items: 50
-    # templates:
-      # path: /path/to/Jinja2/templates
-      # static: /path/to/static/folder # css/js/img
+    templates:
+      # Overrides for collections/items/index.html and item.html (map view
+      # when items have no geometry). Other pages fall back to pygeoapi's
+      # built-in templates. Relative to the directory gunicorn runs in.
+      path: rmtn_templates
     map:
         url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
         attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
@@ -189,7 +191,7 @@ resources:
     rmtn-surface:
         type: collection
         title: 'RA-IV RMTN: Surface Data'
-        description: 'Surface data bulletins (WMO data type designator T1 = S) in the SURFACE folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        description: 'Surface data bulletins (WMO data type designator T1 = S) in the SURFACE folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix. Opening an item adds the locations of the reporting stations or platforms, where they can be determined.'
         keywords:
             - National Weather Service
             - RA-IV
@@ -210,11 +212,13 @@ resources:
               data: https://ra4-gifs.weather.gov/data/RMTN/SURFACE/
               id_field: id
               time_field: reference_time
+              options:
+                  inspect_text: true
 
     rmtn-fcast:
         type: collection
         title: 'RA-IV RMTN: Forecasts'
-        description: 'Forecast bulletins (WMO data type designator T1 = F) in the FCAST folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        description: 'Forecast bulletins (WMO data type designator T1 = F) in the FCAST folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix. Opening an aerodrome forecast (TAF) item adds the locations of the aerodromes, where they can be determined.'
         keywords:
             - National Weather Service
             - RA-IV
@@ -235,11 +239,13 @@ resources:
               data: https://ra4-gifs.weather.gov/data/RMTN/FCAST/
               id_field: id
               time_field: reference_time
+              options:
+                  inspect_text: true
 
     rmtn-ua:
         type: collection
         title: 'RA-IV RMTN: Upper-Air Data'
-        description: 'Upper air data bulletins (WMO data type designator T1 = U) in the UA folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        description: 'Upper air data bulletins (WMO data type designator T1 = U) in the UA folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix. Opening an item adds the locations of the reporting stations or platforms, where they can be determined.'
         keywords:
             - National Weather Service
             - RA-IV
@@ -260,6 +266,8 @@ resources:
               data: https://ra4-gifs.weather.gov/data/RMTN/UA/
               id_field: id
               time_field: reference_time
+              options:
+                  inspect_text: true
 
     rmtn-warn:
         type: collection
@@ -315,7 +323,7 @@ resources:
     rmtn-sat:
         type: collection
         title: 'RA-IV RMTN: Satellite Data'
-        description: 'Satellite data bulletins (WMO data type designator T1 = T) in the SAT folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix.'
+        description: 'Satellite data bulletins (WMO data type designator T1 = T) in the SAT folder of the RA-IV GIFS RMTN data. Files are named TTAAII_CCCC_DDHHMM (WMO abbreviated heading and UTC day, hour and minute), optionally followed by a suffix. Opening an item adds the locations of the reporting stations or platforms, where they can be determined.'
         keywords:
             - National Weather Service
             - RA-IV
@@ -336,6 +344,8 @@ resources:
               data: https://ra4-gifs.weather.gov/data/RMTN/SAT/
               id_field: id
               time_field: reference_time
+              options:
+                  inspect_text: true
 
     rmtn-radar:
         type: collection

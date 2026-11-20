@@ -58,6 +58,7 @@ Config example::
               # cache_ttl: 60
               # inspect_grib: extent  # | full | false
               # inspect_bufr: false   # true: decode BUFR for station locations
+              # inspect_text: false   # true: locations from WMO text bulletins
 """
 
 from copy import deepcopy
@@ -105,6 +106,16 @@ class _State:
         self.grib_cache = {}
         self.collection_id = None
         self.server_url = None
+
+
+def _points_geometry(points):
+    """Point / MultiPoint from (lon, lat) tuples, repeats dropped"""
+    unique = list(dict.fromkeys(points))
+    if not unique:
+        return None
+    if len(unique) == 1:
+        return {'type': 'Point', 'coordinates': list(unique[0])}
+    return {'type': 'MultiPoint', 'coordinates': [list(p) for p in unique]}
 
 
 def _get_state(key):
@@ -225,6 +236,10 @@ class FileListingProvider(BaseProvider):
         # decode BUFR files on /items/{id} for station locations (opt-in;
         # BUFR bulletins have no file extension to detect them by)
         self.inspect_bufr = bool((self.options or {}).get('inspect_bufr',
+                                                          False))
+        # locations from WMO text bulletins (station ids + NWS station
+        # tables, or positions coded in the reports); see wmo_text.py
+        self.inspect_text = bool((self.options or {}).get('inspect_text',
                                                           False))
         self.get_fields()
         if (self.options or {}).get('prewarm', True) \
@@ -537,6 +552,34 @@ class FileListingProvider(BaseProvider):
         feature['geometry'] = info['geometry']
         feature['properties'].update(info['properties'])
 
+    def _add_text_info(self, feature, entry):
+        """Locate the reports in a WMO text bulletin (best effort)"""
+        from pygeoapi.provider import wmo_text
+
+        key = ('text', entry['name'], entry['size'])
+        if key in self._st.grib_cache:
+            info = self._st.grib_cache[key]
+        else:
+            try:
+                text = b''.join(self.iter_bytes(entry)).decode('latin-1')
+                info = wmo_text.locate(text)
+            except Exception as err:
+                LOGGER.warning(f"Could not read {entry['name']}: {err}")
+                return
+            if len(self._st.grib_cache) > 64:
+                self._st.grib_cache.clear()
+            self._st.grib_cache[key] = info  # None = no supported bulletin
+        if info is None:
+            return
+        feature['geometry'] = _points_geometry(info['points'])
+        props = {'number_of_reports': info['number_of_reports'],
+                 'location_source': info['location_source']}
+        if info['stations']:
+            props['stations'] = info['stations']
+        if info['unlocated_stations']:
+            props['unlocated_stations'] = info['unlocated_stations']
+        feature['properties'].update(props)
+
     def _read_bufr(self, entry):
         """
         Station locations from every BUFR message in the file.
@@ -570,14 +613,7 @@ class FileListingProvider(BaseProvider):
             subsets += n
             categories.add(cat)
 
-        unique = list(dict.fromkeys(points))  # drop repeats, keep order
-        if not unique:
-            geometry = None
-        elif len(unique) == 1:
-            geometry = {'type': 'Point', 'coordinates': list(unique[0])}
-        else:
-            geometry = {'type': 'MultiPoint',
-                        'coordinates': [list(p) for p in unique]}
+        geometry = _points_geometry(points)
 
         props = {
             'number_of_messages': len(messages),
@@ -817,6 +853,8 @@ class FileListingProvider(BaseProvider):
                 self._add_grib_info(feature, entry)
             elif self.inspect_bufr:
                 self._add_bufr_info(feature, entry)
+            elif self.inspect_text:
+                self._add_text_info(feature, entry)
             return feature
         raise ProviderItemNotFoundError(f'Item not found: {identifier}')
 
